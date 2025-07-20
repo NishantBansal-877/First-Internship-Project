@@ -1,0 +1,33 @@
+{
+  "name": "javascript",
+  "version": "1.0.0",
+  "description": "a simple code sample on how to use Azure OpenAI Service with JavaScript",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "build": "node server.js",
+    "start": "nodemon src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "nodejs",
+    "javascript",
+    "ai",
+    "artificial intelligence",
+    "azure-openai"
+  ],
+  "author": "Glaucia Lemos <Twitter: >",
+  "license": "MIT",
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  },
+  "dependencies": {
+    "@azure/identity": "latest",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.0",
+    "express": "^5.1.0",
+    "mongoose": "^8.16.4",
+    "openai": "^5.8.2",
+    "xlsx": "^0.18.5"
+  }
+}
