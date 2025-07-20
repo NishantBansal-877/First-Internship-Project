@@ -3,60 +3,52 @@
 import express from "express";
 import { handler } from "./mongoDB.js";
 const router = express.Router();
-let request = [];
+let requestQueue = [];
 
 router.route("/").post(addData).patch(updateData).delete(deleteData);
 
 export default router;
 
-async function continousFunction(res) {
-  if (request.length > 0) {
-    const data = request.shift();
+async function continousFunction() {
+  if (requestQueue.length > 0) {
+    const { data, resolve, reject } = requestQueue.shift();
+
     try {
-      var reply = await handler(data);
+      const reply = await handler(data);
+      resolve(reply); 
     } catch (err) {
-      console.error("Update error:", err);
+      console.error("Handler error:", err);
+      reject("Failed to process");
     }
-    res.end(reply);
   }
-  setTimeout(continousFunction, 1000);
+  setTimeout(continousFunction, 100); 
 }
 
-function addData(req, res) {
-  let workbook = "";
+continousFunction();
+
+
+function handler(req, res) {
+  let body = "";
 
   req.on("data", (chunk) => {
-    workbook += chunk.toString();
+    body += chunk.toString();
   });
 
-  req.on("end", async () => {
-    request.push(workbook);
-    continousFunction(res);
-  });
-}
+  req.on("end", () => {
+    // Wrap response handling in a Promise
+    const resultPromise = new Promise((resolve, reject) => {
+      requestQueue.push({ data: body, resolve, reject });
+    });
 
-function updateData(req, res) {
-  let workbook = "";
-
-  req.on("data", (chunk) => {
-    workbook += chunk.toString();
-  });
-
-  req.on("end", async () => {
-    request.push(workbook);
-    continousFunction(res);
+    resultPromise
+      .then((reply) => {
+        res.end(reply); // return response only when handler is done
+      })
+      .catch((err) => {
+        res.statusCode = 500;
+        res.end(err);
+      });
   });
 }
 
-function deleteData(req, res) {
-  let workbook = "";
 
-  req.on("data", (chunk) => {
-    workbook += chunk.toString();
-  });
-
-  req.on("end", async () => {
-    request.push(workbook);
-    continousFunction(res);
-  });
-}
