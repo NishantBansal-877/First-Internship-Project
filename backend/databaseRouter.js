@@ -5,7 +5,7 @@ import { handler } from "./mongoDB.js";
 const router = express.Router();
 let requestQueue = [];
 
-router.route("/").post(handler);
+router.route("/").post(database);
 
 export default router;
 
@@ -27,7 +27,7 @@ async function continousFunction() {
 continousFunction();
 
 
-function handler(req, res) {
+function database(req, res) {
   let body = "";
 
   req.on("data", (chunk) => {
@@ -35,14 +35,14 @@ function handler(req, res) {
   });
 
   req.on("end", () => {
-    // Wrap response handling in a Promise
+    
     const resultPromise = new Promise((resolve, reject) => {
       requestQueue.push({ data: body, resolve, reject });
     });
 
     resultPromise
       .then((reply) => {
-        res.end(reply); // return response only when handler is done
+        res.end(reply);
       })
       .catch((err) => {
         res.statusCode = 500;
