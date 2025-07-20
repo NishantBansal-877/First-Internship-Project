@@ -5,7 +5,7 @@ import { handler } from "./mongoDB.js";
 const router = express.Router();
 let requestQueue = [];
 
-router.route("/").post(addData).patch(updateData).delete(deleteData);
+router.route("/").post(handler);
 
 export default router;
 
