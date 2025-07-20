@@ -1,0 +1,10 @@
+{
+  "name": "json-convertor",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "echo 'No build step required'"
+  },
+  "dependencies": {
+    "xlsx": "^0.18.5"
+  }
+}
