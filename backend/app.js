@@ -2,7 +2,7 @@
 
 import express from "express";
 import userRouter from "./userRouter.js";
-import databaseRouter from "./databaseRouter1.js";
+import databaseRouter from "./databaseRouter.js";
 import cors from "cors";
 
 const app = express();
