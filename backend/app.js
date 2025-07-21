@@ -2,7 +2,7 @@
 
 import express from "express";
 import userRouter from "./userRouter.js";
-import databaseRouter from "./databaseRouter.js";
+import databaseRouter from "./databaseRouter1.js";
 import cors from "cors";
 
 const app = express();
@@ -31,5 +31,5 @@ app.use("/json", databaseRouter);
 
 const port = process.env.PORT || 5000;
 app.listen(port, () => {
-  console.log("App is listening......");
+  console.log("App is listening......" + port);
 });
