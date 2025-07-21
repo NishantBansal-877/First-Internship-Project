@@ -25,9 +25,9 @@ var corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.use("/",(req,res){
+app.use("/",(req,res)=>{
 console.log("hy from server");
-}
+});
 app.use("/user", userRouter);
 app.use("/json", databaseRouter);
 
