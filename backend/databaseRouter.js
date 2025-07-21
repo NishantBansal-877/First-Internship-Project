@@ -3,52 +3,76 @@
 import express from "express";
 import { handler } from "./mongoDB.js";
 const router = express.Router();
-let requestQueue = [];
-
-router.route("/").post(database);
+let request = [];
+let sendQueue = [];
+router
+  .route("/")
+  .post(addData)
+  .patch(updateData)
+  .delete(deleteData)
+  .get(sendData);
 
 export default router;
 
 async function continousFunction() {
-  if (requestQueue.length > 0) {
-    const { data, resolve, reject } = requestQueue.shift();
-
+  if (request[0]) {
+    const data = request.shift();
     try {
-      const reply = await handler(data);
-      resolve(reply); 
+      var status = await handler(data);
     } catch (err) {
-      console.error("Handler error:", err);
-      reject("Failed to process");
+      console.error("Update error:", err);
     }
+    const { idNo } = JSON.parse(data);
+    const obj = { idNo: idNo, status: status };
+    sendQueue.push(obj);
   }
-  setTimeout(continousFunction, 100); 
 }
 
-continousFunction();
+function sendData(req, res) {
+  if (!sendQueue) {
+    res.end(JSON.stringify(""));
+  } else {
+    const data = sendQueue.shift();
+    res.end(JSON.stringify(data));
+  }
+}
 
-
-function database(req, res) {
-  let body = "";
+function addData(req, res) {
+  let workbook = "";
 
   req.on("data", (chunk) => {
-    body += chunk.toString();
+    workbook += chunk.toString();
   });
 
-  req.on("end", () => {
-    
-    const resultPromise = new Promise((resolve, reject) => {
-      requestQueue.push({ data: body, resolve, reject });
-    });
-
-    resultPromise
-      .then((reply) => {
-        res.end(reply);
-      })
-      .catch((err) => {
-        res.statusCode = 500;
-        res.end(err);
-      });
+  req.on("end", async () => {
+    request.push(workbook);
+    continousFunction();
+    res.end();
   });
 }
 
+function updateData(req, res) {
+  let workbook = "";
 
+  req.on("data", (chunk) => {
+    workbook += chunk.toString();
+  });
+
+  req.on("end", async () => {
+    request.push(workbook);
+    continousFunction(res);
+  });
+}
+
+function deleteData(req, res) {
+  let workbook = "";
+
+  req.on("data", (chunk) => {
+    workbook += chunk.toString();
+  });
+
+  req.on("end", async () => {
+    request.push(workbook);
+    continousFunction(res);
+  });
+}
