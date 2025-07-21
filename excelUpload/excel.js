@@ -14,7 +14,6 @@ let allCheckbox = [];
 let allDeleteBtn = [];
 let request = [];
 let uploadFileQueue = [];
-let statusArray = [];
 const event = new Event("fileDiv-changed");
 
 optionsDiv.addEventListener("click", (e) => {
@@ -126,50 +125,12 @@ const sendBtnFunc = function () {
       allCheckbox.splice(idx, 1);
       allDeleteBtn.splice(idx, 1);
       file = filesData[idx];
-      let obj = { idNo: k, status: "" };
-      statusArray.push(obj);
-      const sidx = statusArray.length - 1;
       sendToServer(filesData[idx], filesName[idx], k);
       filesName.splice(idx, 1);
       filesData.splice(idx, 1);
     }
   }
 };
-continousFunction();
-
-function continousFunction() {
-  if (statusArray[0]) {
-    if (statusArray[0].status === "") {
-      setTimeout(continousFunction, 2000);
-      return;
-    }
-    let { idNo, status } = statusArray.shift();
-    try {
-      var fileElement = document.querySelector(
-        `.file-container[idno="${idNo}"] .status`
-      );
-    } catch (err) {
-      console.error("error:", err);
-      setTimeout(continousFunction, 2000);
-    }
-
-    if (!fileElement) {
-      setTimeout(continousFunction, 2000);
-      return;
-    }
-    let color =
-      status == "Added"
-        ? "green"
-        : status == "Updated"
-        ? "blue"
-        : status == "Deleted"
-        ? "red"
-        : "black";
-    fileElement.style.color = color;
-    fileElement.innerHTML = `<p>${status}</p>`;
-  }
-  setTimeout(continousFunction, 2000);
-}
 
 sendBtn.addEventListener("click", sendBtnFunc);
 
@@ -179,10 +140,12 @@ function sendToServer(file, fileName, idNo) {
   const client = new XMLHttpRequest();
   reader.onload = (event) => {
     const arrayBuffer = event.target.result;
-    const workbook = XLSX.read(arrayBuffer, { type: arrayBuffer });
+    const workbook = XLSX.read(arrayBuffer, {
+      type: arrayBuffer,
+    });
     workbook.fileName = fileName;
     workbook.method = option;
-
+    workbook.idNo = idNo;
     const workbookJson = JSON.stringify(workbook);
     client.open("POST", "http://127.0.0.1:5000/json", true);
     client.setRequestHeader("content-type", "application/json");
@@ -190,13 +153,47 @@ function sendToServer(file, fileName, idNo) {
     client.onreadystatechange = function () {
       if (client.readyState === 4) {
         if (client.status === 200) {
-          const obj = statusArray.find((o) => o.idNo === idNo);
-          if (obj) {
-            obj.status = client.responseText;
-          }
+        } else {
+          throw console.error(client.statusText);
         }
       }
     };
   };
   reader.readAsArrayBuffer(file);
+}
+getStatus();
+async function getStatus() {
+  const data = await fetch("http://127.0.0.1:5000/json");
+  const result = await data.text();
+
+  if (!result) {
+    setTimeout(getStatus, 3000);
+    return;
+  }
+  const { idNo, status } = JSON.parse(result);
+  try {
+    var fileElement = document.querySelector(
+      `.file-container[idno="${idNo}"] .status`
+    );
+  } catch (err) {
+    console.error("error:", err);
+    setTimeout(getStatus, 3000);
+    return;
+  }
+
+  if (!fileElement) {
+    setTimeout(getStatus, 3000);
+    return;
+  }
+  let color =
+    status == "Added"
+      ? "green"
+      : status == "Updated"
+      ? "blue"
+      : status == "Deleted"
+      ? "red"
+      : "black";
+  fileElement.style.color = color;
+  fileElement.innerHTML = `<p>${status}</p>`;
+  setTimeout(getStatus, 3000);
 }
